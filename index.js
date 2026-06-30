@@ -3414,8 +3414,8 @@ if (!isVercel) {
       //So yes: remove/replace those lines in the Socket.IO server.
       // but running in loacalhost you should keep it for testing with cookie auth.
       //?
-      // const cookies = parseCookies(socket.handshake.headers?.cookie || "");
-      // const token = cookies.accessToken;
+      const cookies = parseCookies(socket.handshake.headers?.cookie || "");
+      const token = cookies.accessToken;
       //?
       if (!token) return next(new Error("NO_TOKEN"));
 
