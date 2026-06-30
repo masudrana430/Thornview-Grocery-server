@@ -35,23 +35,23 @@ const cookie = require("cookie");
 
 
 // ? befor deploy 
-let serviceAccount;
+// let serviceAccount;
 
-if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
-  serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
+// if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
+//   serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
 
-  if (serviceAccount.private_key) {
-    serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, "\n");
-  }
-} else {
-  serviceAccount = require("./sarviceKey.json"); // local fallback
-}
+//   if (serviceAccount.private_key) {
+//     serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, "\n");
+//   }
+// } else {
+//   serviceAccount = require("./sarviceKey.json"); // local fallback
+// }
 //?or
 // const serviceAccount = require("./sarviceKey.json");
 
 //? for deploy
-// const decoded = Buffer.from(process.env.FB_SERVICE_KEY, 'base64').toString('utf8')
-// const serviceAccount = JSON.parse(decoded);
+const decoded = Buffer.from(process.env.FB_SERVICE_KEY, 'base64').toString('utf8')
+const serviceAccount = JSON.parse(decoded);
 // or
 // let serviceAccount;
 
@@ -69,6 +69,10 @@ if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
 //const cookies = parseCookies(socket.handshake.headers?.cookie || "");
       // const token = cookies.accessToken;
 //comment it
+
+
+
+
 
 // all console.log commented for deploy
 // await client.connect() commented for deploy
@@ -139,7 +143,7 @@ if (!admin.apps.length) {
     projectId: serviceAccount.project_id,
   });
 }
-console.log("✅ Firebase Admin project_id:", serviceAccount.project_id);
+// console.log("✅ Firebase Admin project_id:", serviceAccount.project_id);
 // after deploy uncomment it
 
 // ------------------- MongoDB -------------------
@@ -3412,7 +3416,7 @@ if (!isVercel) {
   });
 
   io.on("connection", (socket) => {
-    console.log("✅ socket connected:", socket.id, socket.user);
+    // console.log("✅ socket connected:", socket.id, socket.user);
     // after deploying , uncomment it
 
     const myId = String(socket.user.userId);
@@ -3451,7 +3455,7 @@ if (!isVercel) {
         if (!isAdmin && !participants.includes(myId)) return;
 
         socket.join(`conv:${id}`);
-        console.log("✅ joined room", `conv:${id}`, "by", myId);
+        // console.log("✅ joined room", `conv:${id}`, "by", myId);
         // after deploying , uncomment it
       } catch (err) {
         console.error("conversation:join error:", err);
@@ -4064,200 +4068,7 @@ app.use("/api/uploads", customerUploadRouter);
 
 
 
-// let dbInitPromise;
 
-// async function initDbOnce() {
-//   if (!dbInitPromise) {
-//     dbInitPromise = (async () => {
-//       await client.connect();
-//       console.log("✅ Connected to MongoDB");
-//       db = client.db(process.env.DB_NAME || "thomview");
-
-//       usersCollection = db.collection("users");
-//       homeMosaicsCollection = db.collection("home_mosaics");
-//       productsCollection = db.collection("products");
-//       ordersCollection = db.collection("orders"); // ✅
-//       homeBrandBannersCollection = db.collection("home_brand_banners");
-//       homeBigDealsCollection = db.collection("home_big_deals");
-//       homeProductRailsCollection = db.collection("home_product_rails");
-//       homeHeroWithRailCollection = db.collection("home_hero_with_rail");
-//       homeRailWithBannerCollection = db.collection("home_rail_with_banner");
-//       homeDepartmentsCollection = db.collection("home_departments");
-//       homeRailSectionsCollection = db.collection("home_rail_sections");
-//       conversationsCollection = db.collection("chat_conversations");
-//       messagesCollection = db.collection("chat_messages");
-
-//       // after db + collections are created
-//       app.locals.usersCollection = usersCollection;
-//       // create these (if you don't already)
-//       app.locals.conversationsCollection = conversationsCollection;
-//       app.locals.messagesCollection = messagesCollection;
-
-//       // (optional) indexes
-//       // keep createIndex, avoid dropIndex on serverless if possible
-//       console.log("✅ DB ready");
-//     })();
-//   }
-//   return dbInitPromise;
-// }
-
-// ✅ ensure DB is ready before any route uses collections
-// app.use(async (req, res, next) => {
-//   try {
-//     await initDbOnce();
-//     next();
-//   } catch (err) {
-//     console.error("DB init failed:", err);
-//     res.status(500).json({ error: { message: "DB connection failed" } });
-//   }
-// });
-
-
-// ------------------- Start -------------------
-// async function run() {
-//   try {
-//     // await client.connect();
-//     // console.log("✅ Connected to MongoDB");
-
-//     db = client.db(process.env.DB_NAME || "thomview"); // ✅ global assignment
-
-
-//     usersCollection = db.collection("users");
-//     homeMosaicsCollection = db.collection("home_mosaics");
-//     productsCollection = db.collection("products");
-//     ordersCollection = db.collection("orders"); // ✅
-//     homeBrandBannersCollection = db.collection("home_brand_banners");
-//     homeBigDealsCollection = db.collection("home_big_deals");
-//     homeProductRailsCollection = db.collection("home_product_rails");
-//     homeHeroWithRailCollection = db.collection("home_hero_with_rail");
-//     homeRailWithBannerCollection = db.collection("home_rail_with_banner");
-//     homeDepartmentsCollection = db.collection("home_departments");
-//     homeRailSectionsCollection = db.collection("home_rail_sections");
-//     conversationsCollection = db.collection("chat_conversations");
-//     messagesCollection = db.collection("chat_messages");
-
-
-
-
-
-//     // after db + collections are created
-//     app.locals.usersCollection = usersCollection;
-//     // create these (if you don't already)
-//     app.locals.conversationsCollection = conversationsCollection;
-//     app.locals.messagesCollection = messagesCollection;
-
-
-
-
-//     // ✅ Indexes (safe)
-//     await safeCreateIndex(usersCollection, { firebaseUid: 1 }, { unique: true });
-//     await safeCreateIndex(usersCollection, { email: 1 }, { unique: true });
-//     await safeCreateIndex(homeMosaicsCollection, { slug: 1 }, { unique: true });
-//     await safeCreateIndex(homeBrandBannersCollection, { slug: 1 }, { unique: true });
-//     await safeCreateIndex(homeBigDealsCollection, { slug: 1 }, { unique: true });
-//     await safeCreateIndex(homeProductRailsCollection, { slug: 1 }, { unique: true });
-//     await safeCreateIndex(homeHeroWithRailCollection, { slug: 1, key: 1 }, { unique: true });
-//     await safeCreateIndex(homeRailWithBannerCollection, { slug: 1, key: 1 }, { unique: true });
-//     await safeCreateIndex(homeDepartmentsCollection, { slug: 1 }, { unique: true });
-//     await safeCreateIndex(homeRailSectionsCollection, { slug: 1, key: 1 }, { unique: true });
-//     await safeCreateIndex(productsCollection, { categorySlug: 1 });
-//     await safeCreateIndex(productsCollection, { price: 1 });
-//     await safeCreateIndex(productsCollection, { brand: 1 });
-//     await safeCreateIndex(productsCollection, { tags: 1 });
-//     await safeCreateIndex(productsCollection, { inStock: 1 });
-//     await safeCreateIndex(productsCollection, { createdAt: -1 });
-//     await safeCreateIndex(productsCollection, { name: "text", brand: "text" }, { name: "name_text_brand_text" });
-//     await safeCreateIndex(
-//       homeProductRailsCollection,
-//       { slug: 1, key: 1 },
-//       { unique: true, name: "slug_1_key_1" }
-//     );
-//     await safeCreateIndex(
-//       ordersCollection,
-//       { orderNumber: 1 },
-//       {
-//         unique: true,
-//         name: "orderNumber_1", // keep the name consistent
-//         partialFilterExpression: { orderNumber: { $type: "string" } },
-//       }
-//     );
-
-//     await safeCreateIndex(ordersCollection, { createdAt: -1 });
-//     await safeCreateIndex(ordersCollection, { userId: 1, createdAt: -1 });
-
-//     await safeCreateIndex(ordersCollection, { status: 1, createdAt: -1 });
-//     await safeCreateIndex(ordersCollection, { "payment.status": 1, createdAt: -1 });
-
-
-//     // ✅ allow multiple rails per slug by using compound unique index
-//     //     That error happens because your collection home_product_rails has a UNIQUE index on slug only:
-
-//     // index: slug_1 dup key: { slug: "home" }
-
-//     // So MongoDB is allowing only ONE document per slug.
-//     // You already have a document with slug: "home" (your screenshot shows it with key: "top-picks"), so inserting another doc with slug: "home" (even with a different key) gets blocked.
-
-//     // ✅ Fix (recommended): change the index to { slug, key } unique
-
-//     // This will let you store multiple rails for the same home page, like:
-
-//     // home + top-picks
-
-//     // home + baby-musts
-//     try {
-//       await homeProductRailsCollection.dropIndex("slug_1");
-//       console.log("🧹 Dropped old unique index: slug_1 (home_product_rails)");
-//     } catch (e) {
-//       // ignore if index doesn't exist
-//     }
-
-//     // ✅ IMPORTANT: If you previously created a unique index on orderNumber,
-//     // it may still block inserts when orderNumber is null.
-//     // Drop the old index if it exists, then create the partial unique index.
-//     try {
-//       await ordersCollection.dropIndex("orderNumber_1");
-//       console.log("🧹 Dropped old index: orderNumber_1");
-//     } catch (e) {
-//       // ignore if index doesn't exist
-//     }
-
-//     // ✅ Try enabling text search (optional; safe)
-//     try {
-//       await productsCollection.createIndex(
-//         { name: "text", brand: "text" },
-//         { name: "name_text_brand_text" }
-//       );
-//       supportsTextSearch = true;
-//       console.log("✅ Text search index ready (supports $text search).");
-//     } catch (err) {
-//       supportsTextSearch = false;
-//       console.warn("⚠️ Text search not available; using regex fallback:", err?.message || err);
-//     }
-
-
-
-//     // ✅ IMPORTANT: start server here (not app.listen)
-//     // server.listen(port, () => {
-//     //   console.log(`✅ Server listening at http://localhost:${port}`);
-//     //   console.log(`✅ CORS origins: ${allowedOrigins.join(", ")}`);
-//     // });
-//     if (!isVercel && server) {
-//       server.listen(port, () => {
-//         console.log(`✅ Server listening at http://localhost:${port}`);
-//         console.log(`✅ CORS origins: ${allowedOrigins.join(", ")}`);
-
-//       });
-//     }
-
-
-
-//   } catch (err) {
-//     console.error("run() error:", err);
-//     process.exit(1);
-//   }
-// }
-
-// run();
 
 // ------------------- DB init (Vercel-safe) -------------------
 const AUTO_INDEX = process.env.AUTO_INDEX === "true";          // optional
@@ -4268,7 +4079,7 @@ let dbInitPromise = null;
 async function initDbOnce() {
   if (!dbInitPromise) {
     dbInitPromise = (async () => {
-      await client.connect(); 
+      // await client.connect(); 
       // ✅ IMPORTANT: connect here (don’t keep it commented)
       db = client.db(process.env.DB_NAME || "thomview");
 
@@ -4352,7 +4163,7 @@ async function initDbOnce() {
         try { await ordersCollection.dropIndex("orderNumber_1"); } catch {}
       }
 
-      console.log("✅ DB initialized");
+      // console.log("✅ DB initialized");
       // after deploying , uncomment it
     })();
   }
