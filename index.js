@@ -7,6 +7,12 @@ const crypto = require("crypto");
 const { MongoClient, ServerApiVersion, ObjectId } = require("mongodb");
 const admin = require("firebase-admin");
 require("dotenv").config();
+
+const dns = require("dns");
+
+if (process.env.NODE_ENV !== "production") {
+  dns.setServers(["1.1.1.1", "8.8.8.8"]);
+}
 // const Stripe = require("stripe");
 const stripe = require("stripe")(process.env.STRIPE_SECRET_KEY);
 // const STRIPE_CURRENCY = (process.env.STRIPE_CURRENCY || "bdt").toLowerCase();
@@ -29,17 +35,17 @@ const cookie = require("cookie");
 
 
 // ? befor deploy 
-// let serviceAccount;
+let serviceAccount;
 
-// if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
-//   serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
+if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
+  serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
 
-//   if (serviceAccount.private_key) {
-//     serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, "\n");
-//   }
-// } else {
-//   serviceAccount = require("./sarviceKey.json"); // local fallback
-// }
+  if (serviceAccount.private_key) {
+    serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, "\n");
+  }
+} else {
+  serviceAccount = require("./sarviceKey.json"); // local fallback
+}
 //?or
 // const serviceAccount = require("./sarviceKey.json");
 
@@ -47,16 +53,16 @@ const cookie = require("cookie");
 // const decoded = Buffer.from(process.env.FB_SERVICE_KEY, 'base64').toString('utf8')
 // const serviceAccount = JSON.parse(decoded);
 // or
-let serviceAccount;
+// let serviceAccount;
 
-if (process.env.FB_SERVICE_KEY) {
-  // FB_SERVICE_KEY should be base64 of the whole JSON file
-  const decoded = Buffer.from(process.env.FB_SERVICE_KEY, "base64").toString("utf8");
-  serviceAccount = JSON.parse(decoded);
-} else {
-  // local dev fallback (only if the file exists locally)
-  serviceAccount = require("./sarviceKey.json");
-}
+// if (process.env.FB_SERVICE_KEY) {
+//   // FB_SERVICE_KEY should be base64 of the whole JSON file
+//   const decoded = Buffer.from(process.env.FB_SERVICE_KEY, "base64").toString("utf8");
+//   serviceAccount = JSON.parse(decoded);
+// } else {
+//   // local dev fallback (only if the file exists locally)
+//   serviceAccount = require("./sarviceKey.json");
+// }
 
 //? befor deploy 
 // socket.io:
@@ -101,7 +107,7 @@ app.set("trust proxy", 1);
 // ------------------- Middleware -------------------
 const allowedOrigins = process.env.CORS_ORIGINS
   ? process.env.CORS_ORIGINS.split(",").map((s) => s.trim())
-  : ["http://localhost:5173", "http://localhost:5174", "https://thomview-grocery.web.app" ,  "https://thomview-grocery.firebaseapp.com",];
+  : ["http://localhost:5173", "http://localhost:5174", "https://thomview-grocery.web.app" ,  "https://thomview-grocery.firebaseapp.com","https://thornview-grocery.web.app",];
 
 
 
@@ -133,7 +139,7 @@ if (!admin.apps.length) {
     projectId: serviceAccount.project_id,
   });
 }
-// console.log("✅ Firebase Admin project_id:", serviceAccount.project_id);
+console.log("✅ Firebase Admin project_id:", serviceAccount.project_id);
 // after deploy uncomment it
 
 // ------------------- MongoDB -------------------
@@ -3406,7 +3412,7 @@ if (!isVercel) {
   });
 
   io.on("connection", (socket) => {
-    // console.log("✅ socket connected:", socket.id, socket.user);
+    console.log("✅ socket connected:", socket.id, socket.user);
     // after deploying , uncomment it
 
     const myId = String(socket.user.userId);
@@ -3445,7 +3451,7 @@ if (!isVercel) {
         if (!isAdmin && !participants.includes(myId)) return;
 
         socket.join(`conv:${id}`);
-        // console.log("✅ joined room", `conv:${id}`, "by", myId);
+        console.log("✅ joined room", `conv:${id}`, "by", myId);
         // after deploying , uncomment it
       } catch (err) {
         console.error("conversation:join error:", err);
@@ -4262,7 +4268,7 @@ let dbInitPromise = null;
 async function initDbOnce() {
   if (!dbInitPromise) {
     dbInitPromise = (async () => {
-      // await client.connect(); 
+      await client.connect(); 
       // ✅ IMPORTANT: connect here (don’t keep it commented)
       db = client.db(process.env.DB_NAME || "thomview");
 
@@ -4346,7 +4352,7 @@ async function initDbOnce() {
         try { await ordersCollection.dropIndex("orderNumber_1"); } catch {}
       }
 
-      // console.log("✅ DB initialized");
+      console.log("✅ DB initialized");
       // after deploying , uncomment it
     })();
   }
