@@ -1,4 +1,4 @@
-// index.js (server) — Thomview Grocery
+// index.js (server) — Thomview Grocery API
 const express = require("express");
 const cors = require("cors");
 const cookieParser = require("cookie-parser");
