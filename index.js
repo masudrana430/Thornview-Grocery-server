@@ -35,34 +35,37 @@ const cookie = require("cookie");
 
 
 // ? befor deploy 
-let serviceAccount;
+// let serviceAccount;
 
-if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
-  serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
+// if (process.env.FIREBASE_SERVICE_ACCOUNT_JSON) {
+//   serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT_JSON);
 
-  if (serviceAccount.private_key) {
-    serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, "\n");
-  }
-} else {
-  serviceAccount = require("./sarviceKey.json"); // local fallback
-}
+//   if (serviceAccount.private_key) {
+//     serviceAccount.private_key = serviceAccount.private_key.replace(/\\n/g, "\n");
+//   }
+// } else {
+//   serviceAccount = require("./sarviceKey.json"); // local fallback
+// }
 //?or
 // const serviceAccount = require("./sarviceKey.json");
 
 //? for deploy
 // const decoded = Buffer.from(process.env.FB_SERVICE_KEY, 'base64').toString('utf8')
 // const serviceAccount = JSON.parse(decoded);
-// or
-// let serviceAccount;
 
-// if (process.env.FB_SERVICE_KEY) {
-//   // FB_SERVICE_KEY should be base64 of the whole JSON file
-//   const decoded = Buffer.from(process.env.FB_SERVICE_KEY, "base64").toString("utf8");
-//   serviceAccount = JSON.parse(decoded);
-// } else {
-//   // local dev fallback (only if the file exists locally)
-//   serviceAccount = require("./sarviceKey.json");
-// }
+// or
+
+
+let serviceAccount;
+
+if (process.env.FB_SERVICE_KEY) {
+  // FB_SERVICE_KEY should be base64 of the whole JSON file
+  const decoded = Buffer.from(process.env.FB_SERVICE_KEY, "base64").toString("utf8");
+  serviceAccount = JSON.parse(decoded);
+} else {
+  // local dev fallback (only if the file exists locally)
+  serviceAccount = require("./sarviceKey.json");
+}
 
 //? befor deploy 
 // socket.io:
@@ -104,7 +107,6 @@ for (const k of requiredEnv) {
 // after adding app.set it fixed deploy in railway
 app.set("trust proxy", 1);
 
-
 // ------------------- Middleware -------------------
 const defaultOrigins = [
   "http://localhost:5173",
@@ -126,8 +128,7 @@ const allowedOrigins = [
   ...new Set([...defaultOrigins, ...environmentOrigins]),
 ];
 
-console.log("Allowed CORS origins:", allowedOrigins);
-
+// console.log("Allowed CORS origins:", allowedOrigins);
 
 
 app.use(cors({
@@ -158,7 +159,7 @@ if (!admin.apps.length) {
     projectId: serviceAccount.project_id,
   });
 }
-console.log("✅ Firebase Admin project_id:", serviceAccount.project_id);
+// console.log("✅ Firebase Admin project_id:", serviceAccount.project_id);
 // after deploy uncomment it
 
 // ------------------- MongoDB -------------------
@@ -3413,8 +3414,8 @@ if (!isVercel) {
       //So yes: remove/replace those lines in the Socket.IO server.
       // but running in loacalhost you should keep it for testing with cookie auth.
       //?
-      const cookies = parseCookies(socket.handshake.headers?.cookie || "");
-      const token = cookies.accessToken;
+      // const cookies = parseCookies(socket.handshake.headers?.cookie || "");
+      // const token = cookies.accessToken;
       //?
       if (!token) return next(new Error("NO_TOKEN"));
 
@@ -3431,7 +3432,7 @@ if (!isVercel) {
   });
 
   io.on("connection", (socket) => {
-    console.log("✅ socket connected:", socket.id, socket.user);
+    // console.log("✅ socket connected:", socket.id, socket.user);
     // after deploying , uncomment it
 
     const myId = String(socket.user.userId);
@@ -3470,7 +3471,7 @@ if (!isVercel) {
         if (!isAdmin && !participants.includes(myId)) return;
 
         socket.join(`conv:${id}`);
-        console.log("✅ joined room", `conv:${id}`, "by", myId);
+        // console.log("✅ joined room", `conv:${id}`, "by", myId);
         // after deploying , uncomment it
       } catch (err) {
         console.error("conversation:join error:", err);
@@ -3611,62 +3612,6 @@ if (!isVercel) {
 }
 
 
-// --- OpenAI client ---
-// const OpenAI = require("openai");
-// const openai = new OpenAI({ apiKey: process.env.OPENAI_API_KEY });
-
-// POST /api/ai/proofread
-// Body: { text: string, tone?: "friendly"|"professional"|"casual" }
-// app.post("/api/ai/proofread", requireAuth, async (req, res) => {
-//   try {
-//     const text = String(req.body?.text ?? "");
-//     const tone = String(req.body?.tone ?? "").toLowerCase();
-
-//     if (!text.trim()) {
-//       return res.status(400).json({ error: { message: "text is required" } });
-//     }
-//     if (text.length > 5000) {
-//       return res.status(400).json({ error: { message: "Max 5000 characters" } });
-//     }
-
-//     const toneHint =
-//       tone === "friendly" ? "Friendly, warm, but not informal." :
-//       tone === "professional" ? "Professional, clear, and concise." :
-//       tone === "casual" ? "Casual, natural, and simple." :
-//       "Keep the original tone.";
-
-//     const instructions = [
-//       "You are a proofreading assistant.",
-//       "Fix spelling, grammar, punctuation, and awkward phrasing.",
-//       "Do NOT change the meaning or add new information.",
-//       "Preserve formatting (line breaks, bullets, emojis).",
-//       `Tone: ${toneHint}`,
-//       "Return ONLY the corrected text, no quotes, no explanations."
-//     ].join("\n");
-
-//     const response = await openai.responses.create({
-//       model: process.env.OPENAI_MODEL || "gpt-4o-mini" || "gpt-4o",
-//       instructions,
-//       input: text,
-//       max_output_tokens: 1200
-//     });
-
-//     return res.json({ data: { corrected: response.output_text } });
-//     // console.log("AI proofread success:", { input: text, corrected: response.output_text });
-//   } catch (err) {
-//   const status = err?.status || err?.response?.status;
-//   const msg = err?.message || "AI proofread failed";
-
-//   if (status === 429) {
-//     return res.status(503).json({
-//       error: { message: "AI is temporarily unavailable. Please try again later." }
-//     });
-//   }
-
-//   return res.status(500).json({ error: { message: msg } });
-// }
-
-// });
 
 
 const { GoogleGenerativeAI } = require("@google/generative-ai");
@@ -3754,228 +3699,6 @@ app.post("/api/ai/proofread", requireAuth, async (req, res) => {
 
 
 
-// ------------------- Socket.IO -------------------
-// AFTER app.use(cors...), app.use(cookieParser()), routes, etc.
-
-// const server = http.createServer(app);
-
-// const io = new Server(server, {
-//   cors: { origin: allowedOrigins, credentials: true },
-// });
-
-// app.locals.io = io;
-
-// ✅ globals assigned after DB connects
-// let conversationsCollection;
-// let messagesCollection;
-
-// function parseCookies(cookieHeader = "") {
-//   return cookieHeader
-//     .split(";")
-//     .map((v) => v.trim())
-//     .filter(Boolean)
-//     .reduce((acc, part) => {
-//       const idx = part.indexOf("=");
-//       if (idx === -1) return acc;
-//       const k = decodeURIComponent(part.slice(0, idx).trim());
-//       const val = decodeURIComponent(part.slice(idx + 1).trim());
-//       acc[k] = val;
-//       return acc;
-//     }, {});
-// }
-
-// ✅ auth via accessToken cookie
-// io.use((socket, next) => {
-//   try {
-//     const cookies = parseCookies(socket.handshake.headers?.cookie || "");
-//     const token = cookies.accessToken;
-//     if (!token) return next(new Error("NO_TOKEN"));
-
-//     const payload = jwt.verify(token, process.env.JWT_ACCESS_SECRET);
-//     const userId = String(payload.userId || "");
-//     const role = String(payload.role || "");
-//     if (!userId) return next(new Error("BAD_TOKEN_PAYLOAD"));
-
-//     socket.user = { userId, role, _id: userId };
-//     next();
-//   } catch (e) {
-//     next(new Error("BAD_TOKEN"));
-//   }
-// });
-
-// io.on("connection", (socket) => {
-//   console.log("✅ socket connected:", socket.id, socket.user);
-
-//   const myId = String(socket.user.userId);
-//   const role = String(socket.user.role);
-
-//   // ✅ join role rooms
-//   if (["admin", "manager"].includes(role)) socket.join("admins");
-//   else socket.join("customers");
-
-//   // ✅ mark online
-//   setOnline(myId, role, socket.id);
-
-//   // ✅ admins should see customer online/offline
-//   io.to("admins").emit("presence:update", { userId: myId, online: true, role });
-
-//   // ✅ customers should see support online/offline
-//   const supportOnline = adminOnlineCount() > 0;
-//   // send to the just-connected socket
-//   socket.emit("support:presence", { online: supportOnline, admins: adminOnlineCount() });
-//   // broadcast to all customers if admin status might have changed
-//   io.to("customers").emit("support:presence", { online: supportOnline, admins: adminOnlineCount() });
-
-
-//   socket.on("conversation:join", async ({ conversationId }) => {
-//     try {
-//       const id = String(conversationId || "");
-//       if (!ObjectId.isValid(id)) return;
-
-//       if (!conversationsCollection) return;
-
-//       const conv = await conversationsCollection.findOne({ _id: new ObjectId(id) });
-//       if (!conv) return;
-
-//       const participants = (conv.participants || []).map(String);
-//       const isAdmin = ["admin", "manager"].includes(role);
-//       if (!isAdmin && !participants.includes(myId)) return;
-
-//       socket.join(`conv:${id}`);
-//       console.log("✅ joined room", `conv:${id}`, "by", myId);
-//     } catch (err) {
-//       console.error("conversation:join error:", err);
-//     }
-//   });
-
-//   socket.on("message:send", async (payload, ack) => {
-//     const safeAck = (obj) => {
-//       try {
-//         if (typeof ack === "function") ack(obj);
-//       } catch { }
-//     };
-
-//     try {
-//       if (!conversationsCollection || !messagesCollection) {
-//         return safeAck({ ok: false, error: "DB_NOT_READY" });
-//       }
-
-//       const conversationId = String(payload?.conversationId || "");
-//       const tempId = String(payload?.tempId || "");
-
-//       // ✅ FIX: text must exist
-//       const text = String(payload?.text ?? "").trim();
-
-//       // backwards compat (older clients send imageUrl only)
-//       const imageUrl = String(payload?.imageUrl ?? "").trim();
-//       const fileUrl = String(payload?.fileUrl ?? "").trim() || imageUrl;
-
-//       const fileName = String(payload?.fileName ?? "").trim();
-//       const mime = String(payload?.mime ?? "").trim();
-//       const size = Number.isFinite(Number(payload?.size)) ? Number(payload.size) : 0;
-//       const duration = Number.isFinite(Number(payload?.duration)) ? Number(payload.duration) : 0;
-
-//       // ✅ infer type if missing
-//       let type = String(payload?.type || "").trim().toLowerCase();
-//       if (!type) {
-//         if (!fileUrl) type = "text";
-//         else if (mime.startsWith("audio/")) type = "audio";
-//         else if (mime.startsWith("image/") || imageUrl) type = "image";
-//         else type = "file";
-//       }
-
-//       const allowedTypes = new Set(["text", "image", "file", "audio"]);
-//       if (!allowedTypes.has(type)) return safeAck({ ok: false, error: "BAD_TYPE", tempId });
-
-//       if (!ObjectId.isValid(conversationId)) {
-//         return safeAck({ ok: false, error: "BAD_CONVERSATION_ID", tempId });
-//       }
-
-//       // ✅ correct validation
-//       if (type === "text" && !text) {
-//         return safeAck({ ok: false, error: "EMPTY_TEXT", tempId });
-//       }
-//       if (type !== "text" && !fileUrl) {
-//         return safeAck({ ok: false, error: "MISSING_FILE_URL", tempId });
-//       }
-
-//       const conv = await conversationsCollection.findOne({ _id: new ObjectId(conversationId) });
-//       if (!conv) return safeAck({ ok: false, error: "CONVERSATION_NOT_FOUND", tempId });
-
-//       const participants = (conv.participants || []).map(String);
-//       const isAdmin = ["admin", "manager"].includes(String(role || ""));
-//       if (!isAdmin && !participants.includes(String(myId))) {
-//         return safeAck({ ok: false, error: "NOT_ALLOWED", tempId });
-//       }
-
-//       const now = new Date();
-
-//       // ✅ store unified fields (+ keep imageUrl for old UIs)
-//       const msg = {
-//         conversationId,
-//         senderId: String(myId),
-//         type,
-//         text: type === "text" ? text : "",
-//         fileUrl: type === "text" ? "" : fileUrl,
-//         imageUrl: type === "image" ? fileUrl : null, // backward compatibility
-//         fileName: type === "text" ? "" : fileName,
-//         mime: type === "text" ? "" : mime,
-//         size: type === "text" ? 0 : size,
-//         duration: type === "audio" ? duration : 0,
-//         createdAt: now,
-//       };
-
-//       const ins = await messagesCollection.insertOne(msg);
-//       msg._id = String(ins.insertedId);
-
-//       const preview =
-//         type === "image" ? "[image]" :
-//           type === "audio" ? "[voice]" :
-//             type === "file" ? "[file]" :
-//               (text.slice(0, 120) || "");
-
-//       await conversationsCollection.updateOne(
-//         { _id: new ObjectId(conversationId) },
-//         {
-//           $set: {
-//             updatedAt: now,
-//             lastMessageAt: now,
-//             lastMessage: preview,
-//           },
-//         }
-//       );
-
-//       // ✅ send to others in the room; sender updates via ACK
-//       socket.to(`conv:${conversationId}`).emit("message:new", { message: msg });
-
-//       return safeAck({ ok: true, message: msg, tempId });
-//     } catch (err) {
-//       console.error("message:send error:", err?.stack || err);
-//       return safeAck({ ok: false, error: "SERVER_ERROR", detail: String(err?.message || err) });
-//     }
-//   });
-
-
-//   socket.on("disconnect", () => {
-//     setOffline(myId, socket.id);
-
-//     // only broadcast offline if user fully disconnected (no more sockets)
-//     if (!isUserOnline(myId)) {
-//       io.to("admins").emit("presence:update", { userId: myId, online: false, role });
-//     }
-
-//     // support status may change if an admin disconnected
-//     if (["admin", "manager"].includes(role)) {
-//       io.to("customers").emit("support:presence", {
-//         online: adminOnlineCount() > 0,
-//         admins: adminOnlineCount(),
-//       });
-//     }
-//   });
-
-
-
-// });
 
 
 // ✅ CUSTOMER CHAT ROUTER
@@ -4081,203 +3804,6 @@ app.use("/api/uploads", customerUploadRouter);
 
 
 
-
-
-// let dbInitPromise;
-
-// async function initDbOnce() {
-//   if (!dbInitPromise) {
-//     dbInitPromise = (async () => {
-//       await client.connect();
-//       console.log("✅ Connected to MongoDB");
-//       db = client.db(process.env.DB_NAME || "thomview");
-
-//       usersCollection = db.collection("users");
-//       homeMosaicsCollection = db.collection("home_mosaics");
-//       productsCollection = db.collection("products");
-//       ordersCollection = db.collection("orders"); // ✅
-//       homeBrandBannersCollection = db.collection("home_brand_banners");
-//       homeBigDealsCollection = db.collection("home_big_deals");
-//       homeProductRailsCollection = db.collection("home_product_rails");
-//       homeHeroWithRailCollection = db.collection("home_hero_with_rail");
-//       homeRailWithBannerCollection = db.collection("home_rail_with_banner");
-//       homeDepartmentsCollection = db.collection("home_departments");
-//       homeRailSectionsCollection = db.collection("home_rail_sections");
-//       conversationsCollection = db.collection("chat_conversations");
-//       messagesCollection = db.collection("chat_messages");
-
-//       // after db + collections are created
-//       app.locals.usersCollection = usersCollection;
-//       // create these (if you don't already)
-//       app.locals.conversationsCollection = conversationsCollection;
-//       app.locals.messagesCollection = messagesCollection;
-
-//       // (optional) indexes
-//       // keep createIndex, avoid dropIndex on serverless if possible
-//       console.log("✅ DB ready");
-//     })();
-//   }
-//   return dbInitPromise;
-// }
-
-// ✅ ensure DB is ready before any route uses collections
-// app.use(async (req, res, next) => {
-//   try {
-//     await initDbOnce();
-//     next();
-//   } catch (err) {
-//     console.error("DB init failed:", err);
-//     res.status(500).json({ error: { message: "DB connection failed" } });
-//   }
-// });
-
-
-// ------------------- Start -------------------
-// async function run() {
-//   try {
-//     // await client.connect();
-//     // console.log("✅ Connected to MongoDB");
-
-//     db = client.db(process.env.DB_NAME || "thomview"); // ✅ global assignment
-
-
-//     usersCollection = db.collection("users");
-//     homeMosaicsCollection = db.collection("home_mosaics");
-//     productsCollection = db.collection("products");
-//     ordersCollection = db.collection("orders"); // ✅
-//     homeBrandBannersCollection = db.collection("home_brand_banners");
-//     homeBigDealsCollection = db.collection("home_big_deals");
-//     homeProductRailsCollection = db.collection("home_product_rails");
-//     homeHeroWithRailCollection = db.collection("home_hero_with_rail");
-//     homeRailWithBannerCollection = db.collection("home_rail_with_banner");
-//     homeDepartmentsCollection = db.collection("home_departments");
-//     homeRailSectionsCollection = db.collection("home_rail_sections");
-//     conversationsCollection = db.collection("chat_conversations");
-//     messagesCollection = db.collection("chat_messages");
-
-
-
-
-
-//     // after db + collections are created
-//     app.locals.usersCollection = usersCollection;
-//     // create these (if you don't already)
-//     app.locals.conversationsCollection = conversationsCollection;
-//     app.locals.messagesCollection = messagesCollection;
-
-
-
-
-//     // ✅ Indexes (safe)
-//     await safeCreateIndex(usersCollection, { firebaseUid: 1 }, { unique: true });
-//     await safeCreateIndex(usersCollection, { email: 1 }, { unique: true });
-//     await safeCreateIndex(homeMosaicsCollection, { slug: 1 }, { unique: true });
-//     await safeCreateIndex(homeBrandBannersCollection, { slug: 1 }, { unique: true });
-//     await safeCreateIndex(homeBigDealsCollection, { slug: 1 }, { unique: true });
-//     await safeCreateIndex(homeProductRailsCollection, { slug: 1 }, { unique: true });
-//     await safeCreateIndex(homeHeroWithRailCollection, { slug: 1, key: 1 }, { unique: true });
-//     await safeCreateIndex(homeRailWithBannerCollection, { slug: 1, key: 1 }, { unique: true });
-//     await safeCreateIndex(homeDepartmentsCollection, { slug: 1 }, { unique: true });
-//     await safeCreateIndex(homeRailSectionsCollection, { slug: 1, key: 1 }, { unique: true });
-//     await safeCreateIndex(productsCollection, { categorySlug: 1 });
-//     await safeCreateIndex(productsCollection, { price: 1 });
-//     await safeCreateIndex(productsCollection, { brand: 1 });
-//     await safeCreateIndex(productsCollection, { tags: 1 });
-//     await safeCreateIndex(productsCollection, { inStock: 1 });
-//     await safeCreateIndex(productsCollection, { createdAt: -1 });
-//     await safeCreateIndex(productsCollection, { name: "text", brand: "text" }, { name: "name_text_brand_text" });
-//     await safeCreateIndex(
-//       homeProductRailsCollection,
-//       { slug: 1, key: 1 },
-//       { unique: true, name: "slug_1_key_1" }
-//     );
-//     await safeCreateIndex(
-//       ordersCollection,
-//       { orderNumber: 1 },
-//       {
-//         unique: true,
-//         name: "orderNumber_1", // keep the name consistent
-//         partialFilterExpression: { orderNumber: { $type: "string" } },
-//       }
-//     );
-
-//     await safeCreateIndex(ordersCollection, { createdAt: -1 });
-//     await safeCreateIndex(ordersCollection, { userId: 1, createdAt: -1 });
-
-//     await safeCreateIndex(ordersCollection, { status: 1, createdAt: -1 });
-//     await safeCreateIndex(ordersCollection, { "payment.status": 1, createdAt: -1 });
-
-
-//     // ✅ allow multiple rails per slug by using compound unique index
-//     //     That error happens because your collection home_product_rails has a UNIQUE index on slug only:
-
-//     // index: slug_1 dup key: { slug: "home" }
-
-//     // So MongoDB is allowing only ONE document per slug.
-//     // You already have a document with slug: "home" (your screenshot shows it with key: "top-picks"), so inserting another doc with slug: "home" (even with a different key) gets blocked.
-
-//     // ✅ Fix (recommended): change the index to { slug, key } unique
-
-//     // This will let you store multiple rails for the same home page, like:
-
-//     // home + top-picks
-
-//     // home + baby-musts
-//     try {
-//       await homeProductRailsCollection.dropIndex("slug_1");
-//       console.log("🧹 Dropped old unique index: slug_1 (home_product_rails)");
-//     } catch (e) {
-//       // ignore if index doesn't exist
-//     }
-
-//     // ✅ IMPORTANT: If you previously created a unique index on orderNumber,
-//     // it may still block inserts when orderNumber is null.
-//     // Drop the old index if it exists, then create the partial unique index.
-//     try {
-//       await ordersCollection.dropIndex("orderNumber_1");
-//       console.log("🧹 Dropped old index: orderNumber_1");
-//     } catch (e) {
-//       // ignore if index doesn't exist
-//     }
-
-//     // ✅ Try enabling text search (optional; safe)
-//     try {
-//       await productsCollection.createIndex(
-//         { name: "text", brand: "text" },
-//         { name: "name_text_brand_text" }
-//       );
-//       supportsTextSearch = true;
-//       console.log("✅ Text search index ready (supports $text search).");
-//     } catch (err) {
-//       supportsTextSearch = false;
-//       console.warn("⚠️ Text search not available; using regex fallback:", err?.message || err);
-//     }
-
-
-
-//     // ✅ IMPORTANT: start server here (not app.listen)
-//     // server.listen(port, () => {
-//     //   console.log(`✅ Server listening at http://localhost:${port}`);
-//     //   console.log(`✅ CORS origins: ${allowedOrigins.join(", ")}`);
-//     // });
-//     if (!isVercel && server) {
-//       server.listen(port, () => {
-//         console.log(`✅ Server listening at http://localhost:${port}`);
-//         console.log(`✅ CORS origins: ${allowedOrigins.join(", ")}`);
-
-//       });
-//     }
-
-
-
-//   } catch (err) {
-//     console.error("run() error:", err);
-//     process.exit(1);
-//   }
-// }
-
-// run();
-
 // ------------------- DB init (Vercel-safe) -------------------
 const AUTO_INDEX = process.env.AUTO_INDEX === "true";          // optional
 const RUN_MIGRATIONS = process.env.RUN_MIGRATIONS === "true";  // optional (use carefully)
@@ -4287,7 +3813,7 @@ let dbInitPromise = null;
 async function initDbOnce() {
   if (!dbInitPromise) {
     dbInitPromise = (async () => {
-      await client.connect(); 
+      // await client.connect(); 
       // ✅ IMPORTANT: connect here (don’t keep it commented)
       db = client.db(process.env.DB_NAME || "thomview");
 
@@ -4371,7 +3897,7 @@ async function initDbOnce() {
         try { await ordersCollection.dropIndex("orderNumber_1"); } catch {}
       }
 
-      console.log("✅ DB initialized");
+      // console.log("✅ DB initialized");
       // after deploying , uncomment it
     })();
   }
