@@ -109,9 +109,27 @@ for (const k of requiredEnv) {
 app.set("trust proxy", 1);
 
 // ------------------- Middleware -------------------
-const allowedOrigins = process.env.CORS_ORIGINS
-  ? process.env.CORS_ORIGINS.split(",").map((s) => s.trim())
-  : ["http://localhost:5173", "http://localhost:5174", "https://thomview-grocery.web.app" ,  "https://thomview-grocery.firebaseapp.com","https://thornview-grocery.web.app",];
+const defaultOrigins = [
+  "http://localhost:5173",
+  "http://localhost:5174",
+
+  "https://thomview-grocery.web.app",
+  "https://thomview-grocery.firebaseapp.com",
+
+  "https://thornview-grocery.web.app",
+  "https://thornview-grocery.firebaseapp.com",
+];
+
+const environmentOrigins = (process.env.CORS_ORIGINS || "")
+  .split(",")
+  .map((origin) => origin.trim())
+  .filter(Boolean);
+
+const allowedOrigins = [
+  ...new Set([...defaultOrigins, ...environmentOrigins]),
+];
+
+console.log("Allowed CORS origins:", allowedOrigins);
 
 
 
